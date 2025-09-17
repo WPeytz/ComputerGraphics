@@ -1,0 +1,72 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Worksheet 3 — Part 3: Transformation Summary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; margin: 2rem; color:#1b1b1b; }
+    code, kbd { background:#f4f4f4; padding:0 .25rem; border-radius:4px; }
+    h1 { margin-top:0; }
+    h2 { margin-top:2rem; }
+    ul { margin:.5rem 0 1rem 1.25rem; }
+    .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#f7f7fb; border:1px solid #e6e6ef; padding:.5rem .75rem; border-radius:6px; }
+    .note { color:#444; font-size:.95rem; }
+  </style>
+</head>
+<body>
+  <h1>Worksheet 3 — Part 3</h1>
+  <p class="note">Reflection on affine and viewing transformations used in Parts 1–2. Matrices are written as functions (general form), multiplied in the same order as in the code (column‑major, post‑multiplying the current transform on the right).</p>
+
+  <h2>1) List of transformation matrices used</h2>
+  <ul>
+    <li><strong>Centering translation</strong> to move the unit cube from <code>[0,1]^3</code> so its center is at the origin:<br>
+      <span class="formula">T<sub>center</sub> = T(-0.5,
+      -0.5, -0.5)</span></li>
+    <li><strong>Rotation about axes</strong> (right‑handed):
+      <ul>
+        <li><span class="formula">R<sub>x</sub>(&theta;)</span> — rotate around the <em>x</em>-axis by <span class="formula">&theta;</span></li>
+        <li><span class="formula">R<sub>y</sub>(&phi;)</span> — rotate around the <em>y</em>-axis by <span class="formula">&phi;</span></li>
+      </ul>
+    </li>
+    <li><strong>Model translations</strong> for layout (left / center / right cubes in Part 2):<br>
+      <span class="formula">T(x, y, z)</span></li>
+    <li><strong>View transform</strong> (we used it as a simple translation that pushes the scene forward into the camera frustum):<br>
+      <span class="formula">V = T(0, 0, +d)</span> with <span class="formula">d &gt; 0</span></li>
+    <li><strong>Orthographic projection</strong> (DirectX/WebGPU depth in <span class="formula">[0,1]</span>):<br>
+      <span class="formula">Ortho(l, r, b, t, n, f)</span></li>
+    <li><strong>Perspective projection</strong> with vertical field of view <span class="formula">fov<sub>y</sub></span> and aspect ratio <span class="formula">a</span> (DirectX/WebGPU depth in <span class="formula">[0,1]</span>):<br>
+      <span class="formula">P = PerspectiveFovY(fov<sub>y</sub>, a, n, f)</span></li>
+  </ul>
+
+  <h2>2) Composite matrix used in the vertex shader</h2>
+  <p>The vertex shader multiplies the input position by a single MVP matrix: <span class="formula">p<sub>clip</sub> = MVP \cdot p<sub>object</sub></span>. Below are the factorizations we used.</p>
+
+  <h3>Part 1 — Isometric wireframe cube (orthographic)</h3>
+  <p>We rendered the unit cube in isometric view using orthographic projection. The composite matrix was</p>
+  <div class="formula">
+    MVP = Ortho(l,r,b,t,n,f) &middot; T(0,0,+d) &middot; R<sub>x</sub>(35.264&deg;) &middot; R<sub>y</sub>(45&deg;) &middot; T(-0.5,-0.5,-0.5)
+  </div>
+  <p class="note">From right to left: move cube center to the origin, rotate <em>y</em> then <em>x</em> to an isometric orientation, translate forward so it lies between near/far, then project orthographically.</p>
+
+  <h3>Part 2 — Three perspective views (drawn in one pass)</h3>
+  <p>All three cubes share the same view and perspective projection; each has its own model transform. For cube <em>i</em> with layout translation <span class="formula">T(x<sub>i</sub>, y<sub>i</sub>, z<sub>i</sub>)</span> and rotations <span class="formula">R<sub>x</sub>(&theta;<sub>i</sub>)</span>, <span class="formula">R<sub>y</sub>(&phi;<sub>i</sub>)</span> we used</p>
+  <div class="formula">
+    MVP<sub>i</sub> = P &middot; V &middot; \big( T(x<sub>i</sub>, y<sub>i</sub>, z<sub>i</sub>) &middot; R<sub>x</sub>(&theta;<sub>i</sub>) &middot; R<sub>y</sub>(&phi;<sub>i</sub>) &middot; T(-0.5,-0.5,-0.5) \big)
+  </div>
+  <ul>
+    <li><strong>One‑point (front)</strong>: <span class="formula">&theta;=0, \; \phi=0</span>, layout translate left (<span class="formula">x&lt;0</span>).</li>
+    <li><strong>Two‑point (X)</strong>: <span class="formula">&theta;=0, \; \phi\approx 30^\circ</span>, layout centered.</li>
+    <li><strong>Three‑point</strong>: <span class="formula">&theta\approx 20^\circ, \; \phi\approx 30^\circ</span>, layout translate right (<span class="formula">x&gt;0</span>).</li>
+  </ul>
+  <p class="note">We pre‑multiplied the shared camera part as <span class="formula">VP = P &middot; V</span> and updated only the model part per cube before drawing.</p>
+
+  <h2>Notes on conventions</h2>
+  <ul>
+    <li>Matrices are <em>column‑major</em>, and we post‑multiply by the next transform on the right (same as the code).</li>
+    <li>Depth range is DirectX/WebGPU style (<span class="formula">z \in [0,1]</span>), therefore we pushed the scene forward with <span class="formula">T(0,0,+d)</span>.</li>
+  </ul>
+</body>
+</html>
