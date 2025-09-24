@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title> Lighting and (forward) shading - Part 6</title>
+</head>
+<body>
+  <canvas id="my-canvas"></canvas>
+  <section style="width: 80%; margin: 40px auto; font-family: sans-serif; line-height: 1.6;">
+    <h2>Part 6 – Written Answers</h2>
+    <ol type="a">
+      <li>
+        <strong>Flat vs. Gouraud vs. Phong shading:</strong><br>
+        Flat shading computes one normal per polygon → same lighting across the face (faceted look).<br>
+        Gouraud shading computes lighting per vertex and interpolates colors across the surface → highlights may be missed if not at a vertex.<br>
+        Phong shading computes lighting per fragment using interpolated normals → best for highlights.<br>
+        Based on results in Parts 4 and 5, <em>Phong shading</em> is better for simulating highlights.
+      </li>
+      <li>
+        <strong>Directional vs. Point light:</strong><br>
+        Directional light has only a direction (like sunlight), no attenuation with distance.<br>
+        Point light emits in all directions from a position, intensity decreases with distance (1/r²).
+      </li>
+      <li>
+        <strong>Eye position influence:</strong><br>
+        Yes. The eye vector affects the specular reflection. Moving the eye changes the highlight position and intensity.
+      </li>
+      <li>
+        <strong>Specular term = (0,0,0):</strong><br>
+        Removes all specular highlights → object looks matte/dull, only diffuse + ambient lighting remain.
+      </li>
+      <li>
+        <strong>Increasing shininess exponent (α):</strong><br>
+        Higher α → sharper, narrower highlights (glossy).<br>
+        Lower α → broader, softer highlights (matte).
+      </li>
+      <li>
+        <strong>Coordinate space:</strong><br>
+        Lighting is usually computed in <em>view (eye) space</em>, where the camera is at the origin and all vectors are transformed accordingly.
+      </li>
+    </ol>
+  </section>
+</body>
+</html>
