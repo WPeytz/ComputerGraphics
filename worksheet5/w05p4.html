@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Worksheet 5 — Part 4 (Phong in fragment)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      background: #eaf0fa;
+      font: 16px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: #1f2933;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 1rem;
+      line-height: 1.65;
+    }
+    h1 {
+      margin: 0 0 1.25rem;
+      font-size: clamp(1.8rem, 2.4vw + 1.2rem, 2.6rem);
+      font-weight: 600;
+      color: #102a43;
+    }
+    p {
+      margin: 0 0 1rem;
+      max-width: 70ch;
+    }
+    .canvas-wrapper {
+      padding: 1.5rem 0 2.5rem;
+    }
+    #gfx {
+      display: block;
+      width: min(100vw, 1000px);
+      height: min(70vh, 650px);
+      margin: 0 auto;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+      background: #06060a;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Worksheet 5 — Part 4: Phong Illumination</h1>
+    <div class="canvas-wrapper">
+      <canvas id="gfx" aria-label="WebGPU rendering of Suzanne using Phong shading"></canvas>
+    </div>
+    <p> Surface normals come from the OBJ model itself. Each vertex carries a vector perpendicular to the surface at that point, or—if they were missing—we’d derive them by averaging the triangle face normals that meet at each vertex. During rendering we pass those per-vertex normals to the vertex shader, interpolate them across each triangle, re-normalize in the fragment shader, and use the result in the Phong lighting equations. </p>
+    <p> If a vertex normal is the same on both sides of a shared edge (common case when you average facet normals), the interpolated normal changes gradually across the polygon, so the highlights and shading blend smoothly—this gives curved-looking surfaces even though the mesh is flat facets. If adjacent faces keep distinct normals (for example, from a “hard” edge), the interpolation stops at the triangle boundary: the lighting changes abruptly and the edge looks sharp. So the quality of the normals largely defines how smooth or faceted the mesh appears under shading.</p>
+  </main>
+
+  <!-- OBJ parser must be first and as a classic script -->
+  <script src="OBJParser.js"></script>
+
+  <!-- Your renderer (classic script; it looks for #gfx and './model.obj') -->
+  <script src="w05p4.js"></script>
+
+  
+</body>
+
+
+</html>

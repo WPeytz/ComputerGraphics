@@ -1,0 +1,8 @@
+# Blender 4.5.3 LTS MTL File: 'None'
+# www.blender.org
+newmtl Default
+Kd 0.8 0.8 0.8   # diffuse color (gray)
+Ka 0.2 0.2 0.2   # ambient color
+Ks 0.0 0.0 0.0   # specular color
+d 1.0            # opacity
+illum 1          # illumination model

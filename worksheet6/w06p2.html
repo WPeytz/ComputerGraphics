@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title> Worksheet 6: Texture mapping - Part 2</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    #my-canvas {
+      width: 1024px;
+      height: 512px;
+      display: block;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+    }
+    .controls {
+      max-width: 1024px;
+      margin: 0 auto 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+    .control-group {
+      margin-bottom: 15px;
+    }
+    .control-group label {
+      display: inline-block;
+      width: 150px;
+      font-weight: bold;
+    }
+    select, input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    .explanation {
+      max-width: 1024px;
+      margin: 20px auto;
+      padding: 15px;
+      background: #e8f4f8;
+      border-left: 4px solid #2196F3;
+      border-radius: 3px;
+    }
+    .explanation h3 {
+      margin-top: 0;
+    }
+    .explanation p {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1> Worksheet 6 — Part 2: Texture mapping with Mipmaps</h1>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Wrapping Mode:</label>
+      <select id="wrapMode">
+        <option value="REPEAT">Repeat</option>
+        <option value="CLAMP_TO_EDGE">Clamp to Edge</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Min Filter:</label>
+      <select id="minFilter">
+        <option value="NEAREST">Nearest</option>
+        <option value="LINEAR">Linear</option>
+        <option value="NEAREST_MIPMAP_NEAREST">Nearest Mipmap Nearest</option>
+        <option value="LINEAR_MIPMAP_NEAREST">Linear Mipmap Nearest</option>
+        <option value="NEAREST_MIPMAP_LINEAR">Nearest Mipmap Linear</option>
+        <option value="LINEAR_MIPMAP_LINEAR" selected>Linear Mipmap Linear</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Mag Filter:</label>
+      <select id="magFilter">
+        <option value="NEAREST">Nearest</option>
+        <option value="LINEAR" selected>Linear</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Mipmapping:</label>
+      <input type="checkbox" id="useMipmaps" checked />
+      <span>Enable Mipmaps</span>
+    </div>
+  </div>
+
+  <canvas id="my-canvas"></canvas>
+
+  <div class="explanation">
+    <h3>Texture Filtering Modes and Their Effects</h3>
+
+    <p><strong>Magnification (magFilter):</strong> When a texture is viewed larger than its original size.</p>
+    <ul>
+      <li><strong>Nearest:</strong> Blocky, pixelated appearance. Fast but low quality.</li>
+      <li><strong>Linear:</strong> Smooth interpolation between pixels. Better quality but slightly slower.</li>
+    </ul>
+
+    <p><strong>Minification (minFilter):</strong> When a texture is viewed smaller than its original size.</p>
+    <ul>
+      <li><strong>Nearest:</strong> Samples single texel. Can cause aliasing and flickering.</li>
+      <li><strong>Linear:</strong> Interpolates between 4 texels. Better but still has issues at distance.</li>
+      <li><strong>Mipmap modes:</strong> Use pre-filtered smaller versions of the texture for better quality at distance.</li>
+    </ul>
+
+    <p><strong>Mipmap Filtering:</strong></p>
+    <ul>
+      <li><strong>NEAREST_MIPMAP_NEAREST:</strong> Picks closest mipmap level, samples one texel. Fast but can show level transitions.</li>
+      <li><strong>LINEAR_MIPMAP_NEAREST:</strong> Picks closest mipmap level, interpolates between texels.</li>
+      <li><strong>NEAREST_MIPMAP_LINEAR:</strong> Interpolates between two mipmap levels, samples one texel per level.</li>
+      <li><strong>LINEAR_MIPMAP_LINEAR (Trilinear):</strong> Best quality. Interpolates between texels AND between mipmap levels. Eliminates most aliasing.</li>
+    </ul>
+
+    <p><strong>Wrapping Modes:</strong></p>
+    <ul>
+      <li><strong>Repeat:</strong> Texture repeats/tiles when coordinates go beyond [0,1]. Good for patterns.</li>
+      <li><strong>Clamp to Edge:</strong> Coordinates are clamped to [0,1]. Edge pixels stretch beyond boundaries.</li>
+    </ul>
+
+    <p><strong>Impact on Magnification/Minification Issues:</strong> Mipmaps solve minification aliasing by providing pre-filtered textures at multiple resolutions. Without mipmaps, distant textures can shimmer and alias. Mipmaps have no effect on magnification - only mag filter matters when zooming in close.</p>
+  </div>
+
+  <script src="w06p2.js"></script>
+</body>
+</html>

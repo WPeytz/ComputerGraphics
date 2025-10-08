@@ -153,7 +153,7 @@ fn fs_main(@location(0) vNormal: vec3<f32>, @location(1) vPos: vec3<f32>) -> @lo
 `;
     console.log('\n----- WGSL (w04p5) -----');
     WGSL_SRC.split('\n').forEach((ln, i)=>console.log(String(i+1).padStart(3,' ')+': '+ln));
-    // Create the main shader module and show diagnostics only in non-smoke path
+    // Createhopw the main shader module and show diagnostics only in non-smoke path
     device.pushErrorScope('validation');
     const shader = device.createShaderModule({
       label: 'W04P5 shaders',
