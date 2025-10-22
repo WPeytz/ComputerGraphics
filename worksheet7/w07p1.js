@@ -24,43 +24,22 @@ void main() {
 }
 `;
 
-// Fragment shader - computes texture coordinates from normal using spherical coordinates
+// Fragment shader - uses world space normal to look up cube map
 const fragmentShaderSource = `#version 300 es
 precision highp float;
 
 in vec3 v_normal;
 out vec4 fragColor;
 
-uniform sampler2D u_texture;
-uniform vec3 u_lightDir;
-uniform vec3 u_ambientLight;
+uniform samplerCube u_texture;
 
 void main() {
-  // Re-normalize the normal (interpolation can denormalize it)
-  vec3 n = normalize(v_normal);
+  // Use world space normal directly as texture coordinates for cube map
+  // No normalization needed, cube map lookup handles it
+  vec3 texColor = texture(u_texture, v_normal).rgb;
 
-  // Convert normal (point on unit sphere) to spherical coordinates
-  // For standard Earth texture (equirectangular projection):
-  // u = longitude mapped to [0,1], v = latitude mapped to [0,1]
-
-  float u = 0.5 + atan(n.x, n.z) / (2.0 * 3.14159265359);
-  float v = 0.5 - asin(n.y) / 3.14159265359;
-
-  // Sample the texture
-  vec3 kd = texture(u_texture, vec2(u, v)).rgb;
-
-  // Diffuse lighting (Lambert)
-  float ndotl = max(dot(n, u_lightDir), 0.0);
-  vec3 diffuse = kd * ndotl;
-
-  // Ambient lighting
-  vec3 ambient = kd * u_ambientLight;
-
-  // Final color with lighting
-  vec3 finalColor = diffuse + ambient;
-
-  // Show textured sphere with lighting
-  fragColor = vec4(finalColor, 1.0);
+  // No shading, just return the texture color
+  fragColor = vec4(texColor, 1.0);
 }
 `;
 
@@ -184,63 +163,60 @@ const indexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-// Load Earth texture
+// Load cube map texture
 const texture = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
 
-// Placeholder color while loading
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-              new Uint8Array([128, 128, 255, 255]));
+// Cube map file names and their orientation
+var cubemap = ['textures/cm_left.png',    // POSITIVE_X
+               'textures/cm_right.png',   // NEGATIVE_X
+               'textures/cm_top.png',     // POSITIVE_Y
+               'textures/cm_bottom.png',  // NEGATIVE_Y
+               'textures/cm_back.png',    // POSITIVE_Z
+               'textures/cm_front.png'];  // NEGATIVE_Z
 
-const image = new Image();
-image.onload = () => {
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+// Load images into an array
+const imgs = [];
+let loadedCount = 0;
 
-  // Generate mipmaps for better quality at distance
-  gl.generateMipmap(gl.TEXTURE_2D);
+// Load all images
+for (let i = 0; i < 6; i++) {
+  imgs[i] = new Image();
+  imgs[i].onload = () => {
+    loadedCount++;
+    if (loadedCount === 6) {
+      // All images loaded, create cube map texture
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
 
-  // FILTERING CHOICE: LINEAR_MIPMAP_LINEAR (Trilinear Filtering)
-  //
-  // The Earth texture is high-resolution, causing severe minification issues during
-  // rotation, especially in detailed areas like mountain ranges and coastlines.
-  //
-  // LINEAR_MIPMAP_LINEAR is chosen because it:
-  // 1. Uses mipmaps - pre-filtered versions of the texture at progressively lower
-  //    resolutions (64x64, 32x32, 16x16, etc.). The GPU selects the appropriate
-  //    mipmap level based on how much the texture is being minified.
-  //
-  // 2. Linear filtering WITHIN each mipmap level - samples 4 texels and interpolates
-  //    between them, providing smooth results instead of blocky nearest-neighbor.
-  //
-  // 3. Linear interpolation BETWEEN mipmap levels - blends between two adjacent
-  //    mipmap levels, eliminating visible "popping" when transitioning between levels.
-  //
-  // This tri-linear approach (2D + level) solves minification aliasing while maintaining
-  // sharpness. Mountain ranges and fine details remain clear without shimmering artifacts
-  // that would occur with NEAREST or LINEAR alone. The slight blur is minimal and
-  // preferable to the severe aliasing/flickering that occurs without mipmaps.
-  //
-  // Alternative options considered:
-  // - NEAREST/LINEAR: Severe aliasing, flickering during rotation
-  // - NEAREST_MIPMAP_NEAREST: Blocky appearance, visible mipmap level transitions
-  // - LINEAR_MIPMAP_NEAREST: Smooth within levels but visible level transitions
-  // - Anisotropic filtering would be even better but requires extensions
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      // Copy each image to the right layer of the cube map
+      const faces = [
+        gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+        gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+        gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+        gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+        gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+      ];
 
-  // Clamp to edge (Earth doesn't repeat)
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      for (let j = 0; j < 6; j++) {
+        gl.texImage2D(faces[j], 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imgs[j]);
+      }
 
-  console.log('Earth texture loaded with LINEAR_MIPMAP_LINEAR (trilinear) filtering');
-  console.log('This filtering mode prevents aliasing in mountain ranges during rotation');
-  console.log('while maintaining sharp detail with minimal blur.');
-};
-image.onerror = () => {
-  console.error('Failed to load earth.jpg');
-};
-image.src = 'earth.jpg';
+      // Set texture parameters
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+
+      console.log('Cube map loaded successfully');
+    }
+  };
+  imgs[i].onerror = () => {
+    console.error('Failed to load cube map texture:', cubemap[i]);
+  };
+  imgs[i].src = cubemap[i];
+}
 
 // Matrix math helpers (column-major)
 function mat4_identity() {
@@ -318,8 +294,6 @@ gl.useProgram(program);
 
 const u_mvp = gl.getUniformLocation(program, 'u_mvp');
 const u_texture = gl.getUniformLocation(program, 'u_texture');
-const u_lightDir = gl.getUniformLocation(program, 'u_lightDir');
-const u_ambientLight = gl.getUniformLocation(program, 'u_ambientLight');
 
 gl.uniform1i(u_texture, 0);
 
@@ -339,13 +313,6 @@ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 // Enable depth testing
 gl.enable(gl.DEPTH_TEST);
 gl.depthFunc(gl.LESS);
-
-// Lighting parameters
-const lightDir = [0.0, 0.0, 1.0]; // Directional light (normalized)
-const ambientLight = [0.2, 0.2, 0.2]; // Ambient light
-
-gl.uniform3fv(u_lightDir, lightDir);
-gl.uniform3fv(u_ambientLight, ambientLight);
 
 // Animation
 let angle = 0;
@@ -379,7 +346,7 @@ function render(timestamp) {
   // Draw sphere
   gl.bindVertexArray(vao);
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
   gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_INT, 0);
 
   requestAnimationFrame(render);

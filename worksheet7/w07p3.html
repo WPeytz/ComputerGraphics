@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title> Worksheet 7 - Environment mapping and normal mapping - Part 3</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #2196F3;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #2196F3;
+      margin-top: 30px;
+    }
+    h3 {
+      color: #666;
+      margin-top: 20px;
+    }
+    #my-canvas {
+      width: 1024px;
+      height: 512px;
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #333;
+      background-color: #000;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .explanation {
+      background-color: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .code-block {
+      background-color: #f4f4f4;
+      border-left: 4px solid #2196F3;
+      padding: 10px 15px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      overflow-x: auto;
+    }
+    .highlight {
+      background-color: #e3f2fd;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    .formula {
+      background-color: #fff9c4;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      font-size: 1.1em;
+    }
+    ul {
+      line-height: 1.8;
+    }
+    .step {
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #e1f5fe;
+      border-radius: 4px;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .comparison-item {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 6px;
+      border: 2px solid #ddd;
+    }
+    .comparison-item h4 {
+      margin-top: 0;
+      color: #2196F3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Worksheet 7 - Environment Mapping and Normal Mapping - Part 3: Reflection</h1>
+
+  <canvas id="my-canvas"></canvas>
+
+  <div class="explanation">
+    <h2>Mirror Ball Reflection</h2>
+    <p>
+      This implementation transforms the sphere into a <span class="highlight">realistic mirror ball</span> by using
+      <span class="highlight">reflection mapping</span> instead of simple environment mapping. The sphere now reflects
+      the environment accurately based on the viewing angle, just like a real mirror.
+    </p>
+
+    <h3>The Problem with Part 2</h3>
+    <p>
+      In Part 2, the sphere simply used its surface normal to look up the environment. This doesn't create
+      a realistic mirror effect because it doesn't account for the viewer's position. A real mirror reflects
+      light based on both the surface normal AND the viewing direction.
+    </p>
+
+    <h3>The Reflection Formula</h3>
+    <p>
+      To create realistic reflections, we use the <strong>reflection vector formula</strong>:
+    </p>
+    <div class="formula">
+      r = i - 2 × dot(n, i) × n
+    </div>
+    <p>Where:</p>
+    <ul>
+      <li><strong>i</strong> = incident direction (from eye to surface point, normalized)</li>
+      <li><strong>n</strong> = surface normal (normalized)</li>
+      <li><strong>r</strong> = reflection direction (what we see in the mirror)</li>
+      <li><strong>dot(n, i)</strong> = dot product measuring how aligned the vectors are</li>
+    </ul>
+
+    <p>
+      GLSL provides the built-in <code>reflect(incident, normal)</code> function that computes this for us.
+    </p>
+
+    <h3>Implementation Details</h3>
+
+    <div class="step">
+      <strong>Step 1: Pass Eye Position</strong>
+      <div class="code-block">uniform vec3 u_eyePosition;</div>
+      <p>The fragment shader needs to know where the camera is to compute the incident direction.</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 2: Pass World Position</strong>
+      <div class="code-block">out vec3 v_worldPos;</div>
+      <p>The vertex shader passes the world space position to the fragment shader.</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 3: Compute Incident Direction</strong>
+      <div class="code-block">vec3 incident = normalize(v_worldPos - u_eyePosition);</div>
+      <p>This gives us the direction from the eye to the surface point.</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 4: Apply Reflection</strong>
+      <div class="code-block">vec3 reflectionDir = reflect(incident, normal);</div>
+      <p>This computes the direction that light would bounce off the mirror surface.</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 5: Sample Environment</strong>
+      <div class="code-block">vec3 texColor = texture(u_texture, reflectionDir).rgb;</div>
+      <p>Use the reflection direction to look up the environment color from the cube map.</p>
+    </div>
+
+    <h3>Distinguishing Reflective vs Non-Reflective Objects</h3>
+    <p>
+      We use a <code>u_reflective</code> uniform to control behavior:
+    </p>
+
+    <div class="comparison">
+      <div class="comparison-item">
+        <h4>Sphere (Reflective = true)</h4>
+        <ul>
+          <li>Compute incident direction</li>
+          <li>Use reflect() function</li>
+          <li>Sample with reflection direction</li>
+          <li><strong>Result:</strong> Mirror ball effect</li>
+        </ul>
+      </div>
+      <div class="comparison-item">
+        <h4>Background (Reflective = false)</h4>
+        <ul>
+          <li>Skip reflection calculation</li>
+          <li>Use direction vector directly</li>
+          <li>Sample with normal direction</li>
+          <li><strong>Result:</strong> Static environment</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Why This Creates a Mirror Effect</h3>
+    <p>
+      The reflection direction changes based on your viewing angle:
+    </p>
+    <ul>
+      <li><strong>Looking straight at the sphere:</strong> You see the environment behind you</li>
+      <li><strong>Looking at the side:</strong> You see the environment to the side</li>
+      <li><strong>As camera orbits:</strong> Reflections change dynamically, just like a real mirror</li>
+    </ul>
+    <p>
+      This is fundamentally different from Part 2, where the sphere always showed the same parts of the
+      environment regardless of viewing angle.
+    </p>
+
+    <h3>Visual Comparison</h3>
+    <div class="comparison">
+      <div class="comparison-item">
+        <h4>Part 2: Environment Mapping</h4>
+        <p>Sphere shows environment based on <strong>surface normal only</strong></p>
+        <p>Looks like environment is painted on the sphere</p>
+      </div>
+      <div class="comparison-item">
+        <h4>Part 3: Reflection Mapping</h4>
+        <p>Sphere shows environment based on <strong>viewing angle + surface normal</strong></p>
+        <p>Looks like a real mirror ball</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="w07p3.js"></script>
+</body>
+</html>

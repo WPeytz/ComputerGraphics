@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Worksheet 7 - Environment mapping and normal mapping - Part 4</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #9C27B0;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #9C27B0;
+      margin-top: 30px;
+    }
+    h3 {
+      color: #666;
+      margin-top: 20px;
+    }
+    #my-canvas {
+      width: 1024px;
+      height: 512px;
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #333;
+      background-color: #000;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .explanation {
+      background-color: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .code-block {
+      background-color: #f4f4f4;
+      border-left: 4px solid #9C27B0;
+      padding: 10px 15px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      overflow-x: auto;
+      font-size: 0.9em;
+    }
+    .highlight {
+      background-color: #f3e5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    .formula {
+      background-color: #fff9c4;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+    ul {
+      line-height: 1.8;
+    }
+    .step {
+      margin: 10px 0;
+      padding: 15px;
+      background-color: #f3e5f5;
+      border-radius: 4px;
+    }
+    .step strong {
+      color: #9C27B0;
+    }
+    .info-box {
+      background-color: #e8f5e9;
+      border-left: 4px solid #4CAF50;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .warning-box {
+      background-color: #fff3e0;
+      border-left: 4px solid #FF9800;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Worksheet 7 - Environment Mapping and Normal Mapping - Part 4: Bump Mapping</h1>
+
+  <canvas id="my-canvas"></canvas>
+
+  <div class="explanation">
+    <h2>Bump Mapping with Normal Maps</h2>
+    <p>
+      This implementation adds <span class="highlight">bump mapping</span> (also called normal mapping) to create
+      the illusion of a bumpy surface on the mirror ball. The surface is still geometrically smooth, but by
+      perturbing the normals used for lighting calculations, we create the appearance of detailed surface relief.
+    </p>
+
+    <h3>What is Bump Mapping?</h3>
+    <p>
+      Bump mapping is a technique that simulates surface detail without adding geometric complexity. Instead of
+      actually modeling bumps with more triangles, we store surface normal variations in a texture (the normal map)
+      and use these modified normals for lighting/reflection calculations.
+    </p>
+
+    <div class="info-box">
+      <strong>Key Insight:</strong> By changing the surface normal at each pixel, we change how light reflects
+      off that point. This creates the illusion that the surface has bumps and dents, even though the geometry
+      is perfectly smooth.
+    </div>
+
+    <h3>The Normal Map Texture</h3>
+    <p>
+      A normal map stores normal vectors as RGB colors:
+    </p>
+    <ul>
+      <li><strong>R channel:</strong> X component of the normal (tangent direction)</li>
+      <li><strong>G channel:</strong> Y component of the normal (bitangent direction)</li>
+      <li><strong>B channel:</strong> Z component of the normal (surface normal direction)</li>
+    </ul>
+    <p>
+      The colors are in the range [0, 1], but normals need to be in the range [-1, 1], so we transform:
+    </p>
+    <div class="code-block">
+normal = texture(normalMap, texCoord).rgb * 2.0 - 1.0;
+    </div>
+    <p>
+      For example:
+    </p>
+    <ul>
+      <li>RGB (0.5, 0.5, 1.0) ’ Normal (0, 0, 1) = flat surface pointing up</li>
+      <li>RGB (1.0, 0.5, 0.5) ’ Normal (1, 0, 0) = surface tilted to the right</li>
+      <li>RGB (0.0, 0.5, 0.5) ’ Normal (-1, 0, 0) = surface tilted to the left</li>
+    </ul>
+
+    <h3>Implementation Pipeline</h3>
+
+    <div class="step">
+      <strong>Step 1: Compute Texture Coordinates</strong>
+      <div class="code-block">// In vertex shader - using spherical mapping
+vec3 n = normalize(a_position);
+float u = 0.5 + atan(n.x, n.z) / (2.0 * À);
+float v = 0.5 - asin(n.y) / À;
+v_texCoord = vec2(u, v);</div>
+      <p>Maps the sphere surface to 2D texture coordinates for sampling the normal map.</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 2: Sample Normal Map</strong>
+      <div class="code-block">vec3 tangentNormal = texture(u_normalMap, v_texCoord).rgb;</div>
+      <p>Read the normal vector from the normal map texture.</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 3: Transform to [-1, 1] Range</strong>
+      <div class="code-block">tangentNormal = tangentNormal * 2.0 - 1.0;</div>
+      <p>Convert from color range [0,1] to normal range [-1,1].</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 4: Transform from Tangent Space to World Space</strong>
+      <div class="code-block">vec3 perturbedNormal = rotate_to_normal(surfaceNormal, tangentNormal);
+perturbedNormal = normalize(perturbedNormal);</div>
+      <p>The normal map stores normals relative to the surface (tangent space). We need to rotate them
+         to world space using the surface normal.</p>
+    </div>
+
+    <div class="step">
+      <strong>Step 5: Use Perturbed Normal for Reflection</strong>
+      <div class="code-block">vec3 incident = normalize(v_worldPos - u_eyePosition);
+vec3 reflectionDir = reflect(incident, perturbedNormal);</div>
+      <p>Instead of using the smooth sphere normal, use the bumpy perturbed normal. This creates
+         the illusion of surface detail in the reflections.</p>
+    </div>
+
+    <h3>The rotate_to_normal Function</h3>
+    <p>
+      This function transforms a vector from tangent space to world space. It builds a local coordinate
+      system (tangent frame) aligned with the surface normal.
+    </p>
+
+    <div class="formula">
+<strong>fn</strong> rotate_to_normal(n: vec3f, v: vec3f) -> vec3f
+{
+  let sgn_nz = sign(n.z + 1.0e-16);
+  let a = -1.0/(1.0 + abs(n.z));
+  let b = n.x*n.y*a;
+  return vec3(1.0 + n.x*n.x*a, b, -sgn_nz*n.x)*v.x
+       + vec3(sgn_nz*b, sgn_nz*(1.0 + n.y*n.y*a), -n.y)*v.y
+       + n*v.z;
+}
+    </div>
+
+    <p><strong>Parameters:</strong></p>
+    <ul>
+      <li><strong>n:</strong> Surface normal in world space (the smooth sphere normal)</li>
+      <li><strong>v:</strong> Tangent space vector from normal map</li>
+      <li><strong>Returns:</strong> World space normal (the bumpy perturbed normal)</li>
+    </ul>
+
+    <div class="info-box">
+      <strong>Why this works:</strong> The function constructs an orthonormal basis (tangent, bitangent, normal)
+      on the fly without storing tangent vectors. It uses the surface normal to define a local coordinate
+      system, then rotates the tangent space normal into that system.
+    </div>
+
+    <h3>Tangent Space vs World Space</h3>
+    <p>
+      Understanding coordinate spaces is crucial for bump mapping:
+    </p>
+    <ul>
+      <li><strong>Tangent Space:</strong> Local to each point on the surface
+        <ul>
+          <li>X-axis (tangent): Points along the surface in one direction</li>
+          <li>Y-axis (bitangent): Points along the surface in perpendicular direction</li>
+          <li>Z-axis (normal): Points away from the surface</li>
+        </ul>
+      </li>
+      <li><strong>World Space:</strong> Global coordinate system
+        <ul>
+          <li>Fixed X, Y, Z axes for the entire scene</li>
+          <li>Used for all geometric calculations (reflection, lighting, etc.)</li>
+        </ul>
+      </li>
+    </ul>
+
+    <div class="warning-box">
+      <strong>Important:</strong> Normal maps store normals in tangent space because this is
+      surface-relative. The same normal map can be applied to different surfaces without modification.
+      However, we must transform to world space before using the normals for reflection calculations.
+    </div>
+
+    <h3>Two Texture Units</h3>
+    <p>
+      This implementation uses two textures simultaneously:
+    </p>
+    <ul>
+      <li><strong>Texture Unit 0:</strong> Cube map (environment reflections)</li>
+      <li><strong>Texture Unit 1:</strong> Normal map (bump detail)</li>
+    </ul>
+    <div class="code-block">// Bind to texture units
+gl.uniform1i(u_texture, 0);
+gl.uniform1i(u_normalMap, 1);
+
+// Activate and bind in render loop
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeTexture);
+gl.activeTexture(gl.TEXTURE1);
+gl.bindTexture(gl.TEXTURE_2D, normalMapTexture);</div>
+
+    <h3>Visual Effect</h3>
+    <p>
+      The combination of reflection mapping and bump mapping creates a highly realistic surface:
+    </p>
+    <ul>
+      <li><strong>Reflection mapping (Part 3):</strong> Makes the sphere reflect the environment like a mirror</li>
+      <li><strong>Bump mapping (Part 4):</strong> Adds surface detail to those reflections</li>
+      <li><strong>Result:</strong> A mirror ball with a bumpy, textured surface that realistically reflects
+          the environment around it</li>
+    </ul>
+
+    <div class="info-box">
+      <strong>Performance Note:</strong> Bump mapping adds detail without adding geometry. A smooth sphere with
+      bump mapping looks as detailed as a sphere with millions of triangles, but renders much faster!
+    </div>
+  </div>
+
+  <script src="w07p4.js"></script>
+</body>
+</html>
