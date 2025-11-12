@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Worksheet 9 - Shadow Mapping with PCF - Part 6</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #my-canvas {
+      width: 1024px;
+      height: 512px;
+      display: block;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+    }
+    .controls {
+      text-align: center;
+      margin: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      margin: 0 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .description {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #f0f8ff;
+      border-left: 4px solid #3498db;
+      border-radius: 5px;
+    }
+    .description h2 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    .description p {
+      line-height: 1.6;
+    }
+    .comparison {
+      text-align: center;
+      margin: 20px auto;
+      padding: 15px;
+      background: white;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .comparison a {
+      display: inline-block;
+      margin: 5px;
+      padding: 8px 16px;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .comparison a:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Worksheet 9 - Shadow Mapping with PCF (Percentage Closer Filtering) - Part 6</h1>
+  
+  <div class="description">
+    <h2>About PCF (Percentage Closer Filtering)</h2>
+    <p>
+      <strong>PCF</strong> is a shadow antialiasing technique that softens shadow edges by averaging 
+      multiple shadow map lookups. Instead of sampling a single texel from the shadow map, PCF samples 
+      a 3×3 grid (9 samples) of texels around the fragment's shadow coordinate and averages the results.
+    </p>
+    <p>
+      This produces <strong>softer, more realistic shadows</strong> with reduced aliasing artifacts 
+      compared to single-sample shadow mapping. The trade-off is increased shader complexity and 
+      9× more texture samples per fragment, but the visual improvement is significant.
+    </p>
+  </div>
+
+  <canvas id="my-canvas"></canvas>
+  
+  <div class="controls">
+    <button id="toggle-animation">Pause Animation</button>
+    <button id="toggle-light">Pause Light</button>
+  </div>
+
+  <div class="comparison">
+    <p><strong>Compare:</strong></p>
+    <a href="w09p3.html">Part 3: Without PCF</a>
+    <a href="w09p6.html">Part 6: With PCF (Current)</a>
+  </div>
+
+  <script src="OBJParser.js"></script>
+  <script src="w09p6.js"></script>
+</body>
+</html>

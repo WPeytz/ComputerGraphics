@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Worksheet 9 - Part 5: Shadow Techniques Comparison</title>
+  <style>
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #34495e;
+      margin-top: 30px;
+      border-left: 4px solid #3498db;
+      padding-left: 15px;
+    }
+    h3 {
+      color: #16a085;
+      margin-top: 20px;
+    }
+    .technique {
+      background: white;
+      padding: 25px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .advantages {
+      background-color: #d5f4e6;
+      padding: 15px;
+      border-left: 4px solid #27ae60;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .disadvantages {
+      background-color: #fadbd8;
+      padding: 15px;
+      border-left: 4px solid #e74c3c;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    ul {
+      margin: 10px 0;
+      padding-left: 25px;
+    }
+    li {
+      margin: 8px 0;
+    }
+    .summary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 8px;
+      margin-top: 30px;
+    }
+    .summary h2 {
+      color: white;
+      border-left-color: white;
+    }
+    strong {
+      font-weight: 600;
+    }
+    .comparison-links {
+      text-align: center;
+      margin: 30px 0;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .comparison-links a {
+      display: inline-block;
+      margin: 10px;
+      padding: 12px 24px;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    .comparison-links a:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Worksheet 9 - Part 5: Comparison of Shadow Techniques</h1>
+  
+  <div class="comparison-links">
+    <p><strong>View the implementations:</strong></p>
+    <a href="w09p2.html">Part 2: Projection Shadows</a>
+    <a href="w09p3.html">Parts 3-4: Shadow Mapping</a>
+  </div>
+
+  <div class="technique">
+    <h2>Projection Shadows (Part 2)</h2>
+    
+    <div class="advantages">
+      <h3>Advantages:</h3>
+      <ul>
+        <li><strong>Simple to implement</strong> - Only requires basic matrix math (shadow projection matrix)</li>
+        <li><strong>Fast computation</strong> - Single rendering pass, no extra textures needed</li>
+        <li><strong>Low memory usage</strong> - No shadow map texture storage required</li>
+        <li><strong>Minimal shader complexity</strong> - Simple vertex transformation with projection matrix</li>
+        <li><strong>Works well for planar receivers</strong> - Perfect for flat ground planes</li>
+      </ul>
+    </div>
+
+    <div class="disadvantages">
+      <h3>Disadvantages:</h3>
+      <ul>
+        <li><strong>No self-shadowing</strong> - Objects cannot cast shadows on themselves</li>
+        <li><strong>Limited to planar surfaces</strong> - Only works for flat shadow receivers (like ground)</li>
+        <li><strong>No soft shadows</strong> - Sharp, hard-edged shadows only</li>
+        <li><strong>Depth fighting artifacts</strong> - Requires epsilon offsets and special depth testing (greater)</li>
+        <li><strong>Not perspective correct</strong> - Shadows can look distorted at angles</li>
+        <li><strong>Cannot handle complex geometry</strong> - Fails with curved or non-planar receivers</li>
+        <li><strong>Single receiver limitation</strong> - Shadows only appear on one designated plane</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="technique">
+    <h2>Shadow Mapping (Parts 3-4)</h2>
+    
+    <div class="advantages">
+      <h3>Advantages:</h3>
+      <ul>
+        <li><strong>Handles self-shadowing</strong> - Objects can correctly shadow themselves</li>
+        <li><strong>Works on any geometry</strong> - Shadows appear on curved surfaces, complex meshes</li>
+        <li><strong>Multiple shadow receivers</strong> - Any object in the scene can receive shadows</li>
+        <li><strong>More realistic appearance</strong> - Proper depth-based occlusion</li>
+        <li><strong>Supports multiple lights</strong> - Can create multiple shadow maps for different lights</li>
+        <li><strong>Hardware support</strong> - Built-in GPU features (comparison samplers, PCF filtering)</li>
+        <li><strong>Extensible</strong> - Can add soft shadows, cascaded shadow maps, etc.</li>
+      </ul>
+    </div>
+
+    <div class="disadvantages">
+      <h3>Disadvantages:</h3>
+      <ul>
+        <li><strong>Higher complexity</strong> - Requires two rendering passes and coordinate transformations</li>
+        <li><strong>Memory overhead</strong> - Needs large depth texture (e.g., 2048x2048 or higher)</li>
+        <li><strong>Resolution dependent</strong> - Shadow quality limited by shadow map resolution</li>
+        <li><strong>Shadow acne artifacts</strong> - Requires bias values to prevent self-shadowing errors</li>
+        <li><strong>Peter Panning</strong> - Too much bias can cause shadows to detach from objects</li>
+        <li><strong>Performance cost</strong> - Two render passes instead of one</li>
+        <li><strong>Aliasing issues</strong> - Can show jagged edges, especially at grazing angles</li>
+        <li><strong>Limited shadow distance</strong> - Shadow map covers finite area (frustum)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="summary">
+    <h2>Summary</h2>
+    <p>
+      <strong>Projection shadows</strong> are ideal for simple scenes with flat ground planes where 
+      performance and simplicity are priorities, and self-shadowing is not needed. They excel in 
+      scenarios like a character walking on flat terrain, where the computational overhead needs 
+      to be minimal.
+    </p>
+    <p>
+      <strong>Shadow mapping</strong> is the industry-standard technique for realistic shadows in 
+      3D graphics, handling complex geometry and self-shadowing at the cost of increased complexity 
+      and memory usage. It is used in virtually all modern games and 3D applications where visual 
+      fidelity is important.
+    </p>
+    <p>
+      For most modern 3D applications, shadow mapping is preferred despite its disadvantages because 
+      it provides much more realistic and flexible shadow rendering. The additional computational 
+      cost is acceptable given the significant improvement in visual quality and the ability to 
+      handle arbitrary scene geometry.
+    </p>
+  </div>
+
+  <div class="comparison-links">
+    <p><strong>Compare the implementations side-by-side:</strong></p>
+    <a href="w09p2.html">Part 2: Projection Shadows</a>
+    <a href="w09p3.html">Parts 3-4: Shadow Mapping</a>
+  </div>
+</body>
+</html>
