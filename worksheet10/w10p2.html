@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Worksheet 10 Part 2: Quaternion Rotation</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #222;
+      color: white;
+      font-family: sans-serif;
+    }
+    h1 {
+      margin: 10px;
+    }
+    canvas {
+      border: 1px solid #444;
+      cursor: grab;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+    .info {
+      margin: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Worksheet 10 Part 2: Quaternion Rotation</h1>
+  <div class="info">Click and drag to orbit using quaternion-based trackball rotation</div>
+  <canvas id="my-canvas" width="800" height="600"></canvas>
+  <script src="quaternion.js"></script>
+  <script src="OBJParser.js"></script>
+  <script src="w10p2.js"></script>
+</body>
+</html>

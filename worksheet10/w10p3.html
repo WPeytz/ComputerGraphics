@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Worksheet 10 Part 3: Dolly and Panning</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #222;
+      color: white;
+      font-family: sans-serif;
+    }
+    h1 {
+      margin: 10px;
+    }
+    canvas {
+      border: 1px solid #444;
+    }
+    .info {
+      margin: 10px;
+      font-size: 14px;
+      text-align: center;
+    }
+    .controls {
+      margin: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    .controls button {
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 2px solid #666;
+      background: #333;
+      color: white;
+      border-radius: 4px;
+    }
+    .controls button.active {
+      border-color: #4a9;
+      background: #2a5;
+    }
+    .controls button:hover {
+      background: #444;
+    }
+    .controls button.active:hover {
+      background: #3b7;
+    }
+  </style>
+</head>
+<body>
+  <h1>Worksheet 10 Part 3: Dolly and Panning</h1>
+  <div class="info">
+    <strong>Left click:</strong> Orbit | <strong>Middle click:</strong> Pan | <strong>Right click:</strong> Dolly<br>
+    Or use buttons below to change left-click mode
+  </div>
+  <div class="controls">
+    <button id="btn-orbit" class="active">Orbit</button>
+    <button id="btn-dolly">Dolly</button>
+    <button id="btn-pan">Pan</button>
+  </div>
+  <canvas id="my-canvas" width="800" height="600"></canvas>
+  <script src="quaternion.js"></script>
+  <script src="OBJParser.js"></script>
+  <script src="w10p3.js"></script>
+</body>
+</html>
